@@ -122,7 +122,7 @@ st.markdown("""
 @st.cache_data
 def load_raw_data():
     base = os.path.join(os.path.dirname(__file__), "..")
-    csv_path  = os.path.join(base, "data", "Telco-Customer-Churn.csv")
+    csv_path = os.path.join(base, "data", "Telco-Customer-Churn.csv")
     xlsx_path = os.path.join(base, "Telco_customer_churn.xlsx")
 
     if os.path.exists(csv_path):
@@ -133,16 +133,28 @@ def load_raw_data():
         st.error("Dataset not found. Run the data conversion script first.")
         st.stop()
 
-    # Basic cleaning for dashboard
-    df["TotalCharges"]  = pd.to_numeric(df["TotalCharges"], errors="coerce")
-    df["TotalCharges"].fillna(df["TotalCharges"].median(), inplace=True)
-    if "customerID" in df.columns:
-        df.drop("customerID", axis=1, inplace=True)
-    return df
+    # ADD THESE LINES HERE
+    print("Columns loaded:")
+    print(df.columns.tolist())
 
+    # Cleaning
+    df.columns = df.columns.str.strip()
+    df.columns = df.columns.str.replace(" ", "", regex=False)
+
+    print("Processed columns:")
+    print(df.columns.tolist())
+
+    if "TotalCharges" in df.columns:
+        df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")
+        df["TotalCharges"] = df["TotalCharges"].fillna(df["TotalCharges"].median())
+    else:
+        st.error(f"TotalCharges column not found.\nColumns are:\n{df.columns.tolist()}")
+        st.stop()
+
+    return df
 df = load_raw_data()
-churned = df[df["Churn"] == "Yes"]
-stayed  = df[df["Churn"] == "No"]
+churned = df[df["ChurnLabel"] == "Yes"]
+stayed = df[df["ChurnLabel"] == "No"]
 
 # ── Plotly theme ───────────────────────────────────────────────────────────────
 COLORS = {
@@ -174,7 +186,7 @@ st.markdown("""
 total        = len(df)
 n_churn      = len(churned)
 churn_rate   = n_churn / total * 100
-avg_tenure   = df["tenure"].mean()
+avg_tenure = df["TenureMonths"].mean()
 avg_monthly  = df["MonthlyCharges"].mean()
 monthly_loss = churned["MonthlyCharges"].sum()
 
@@ -244,7 +256,7 @@ with tab1:
     with c1:
         st.markdown('<div class="chart-card">', unsafe_allow_html=True)
         # Donut chart
-        churn_counts = df["Churn"].value_counts().reset_index()
+        churn_counts = df["ChurnLabel"].value_counts().reset_index()
         churn_counts.columns = ["Churn", "Count"]
         churn_counts["Label"] = churn_counts["Churn"].map(
             {"Yes": "Churned", "No": "Retained"}
@@ -271,14 +283,14 @@ with tab1:
     with c2:
         st.markdown('<div class="chart-card">', unsafe_allow_html=True)
         # Churn by Internet Service
-        internet_churn = df.groupby(["InternetService", "Churn"]).size().reset_index(name="Count")
+        internet_churn = df.groupby(["InternetService", "ChurnLabel"]).size().reset_index(name="Count")
         fig2 = px.bar(
-            internet_churn, x="InternetService", y="Count", color="Churn",
+            internet_churn, x="InternetService", y="Count", color="ChurnLabel",
             barmode="group",
             color_discrete_map={"Yes": COLORS["churn"], "No": COLORS["stay"]},
             title="📶 Churn by Internet Service",
             template=DARK_TEMPLATE,
-            labels={"InternetService": "Internet Service", "Churn": "Churned"},
+            labels={"InternetService": "Internet Service", "ChurnLabel": "Churn"},
         )
         fig2.update_layout(paper_bgcolor=PLOT_BG, plot_bgcolor=PLOT_BG,
                            margin=dict(t=50, b=20, l=10, r=10))
@@ -289,10 +301,12 @@ with tab1:
     c3, c4 = st.columns(2)
     with c3:
         st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-        senior_churn = df.groupby(["SeniorCitizen", "Churn"]).size().reset_index(name="Count")
-        senior_churn["Senior"] = senior_churn["SeniorCitizen"].map({0: "Not Senior", 1: "Senior"})
+        senior_churn = df.groupby(["SeniorCitizen", "ChurnLabel"]).size().reset_index(name="Count")
+        senior_churn["Senior"] = senior_churn["SeniorCitizen"].map(
+        {"Yes": "Senior", "No": "Not Senior"}
+        )
         fig3 = px.bar(
-            senior_churn, x="Senior", y="Count", color="Churn",
+            senior_churn, x="Senior", y="Count", color="ChurnLabel",
             barmode="stack",
             color_discrete_map={"Yes": COLORS["churn"], "No": COLORS["stay"]},
             title="👴 Churn by Senior Citizen Status",
@@ -305,9 +319,9 @@ with tab1:
 
     with c4:
         st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-        gender_churn = df.groupby(["gender", "Churn"]).size().reset_index(name="Count")
+        gender_churn = df.groupby(["Gender", "ChurnLabel"]).size().reset_index(name="Count")
         fig4 = px.bar(
-            gender_churn, x="gender", y="Count", color="Churn",
+            gender_churn, x="Gender", y="Count", color="ChurnLabel",
             barmode="group",
             color_discrete_map={"Yes": COLORS["churn"], "No": COLORS["stay"]},
             title="⚧ Churn by Gender",
@@ -327,9 +341,9 @@ with tab2:
 
     with c1:
         st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-        contract_churn = df.groupby(["Contract", "Churn"]).size().reset_index(name="Count")
+        contract_churn = df.groupby(["Contract", "ChurnLabel"]).size().reset_index(name="Count")
         fig = px.bar(
-            contract_churn, x="Contract", y="Count", color="Churn",
+            contract_churn, x="Contract", y="Count", color="ChurnLabel",
             barmode="group",
             color_discrete_map={"Yes": COLORS["churn"], "No": COLORS["stay"]},
             title="📝 Churn by Contract Type",
@@ -345,7 +359,7 @@ with tab2:
         st.markdown('<div class="chart-card">', unsafe_allow_html=True)
         # Churn rate by contract
         rate_df = df.groupby("Contract").apply(
-            lambda x: (x["Churn"] == "Yes").mean() * 100
+            lambda x: (x["ChurnLabel"] == "Yes").mean() * 100
         ).reset_index()
         rate_df.columns = ["Contract", "Churn Rate (%)"]
         fig2 = px.bar(
@@ -362,9 +376,9 @@ with tab2:
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="chart-card">', unsafe_allow_html=True)
-    payment_churn = df.groupby(["PaymentMethod", "Churn"]).size().reset_index(name="Count")
+    payment_churn = df.groupby(["PaymentMethod", "ChurnLabel"]).size().reset_index(name="Count")
     fig3 = px.bar(
-        payment_churn, x="Count", y="PaymentMethod", color="Churn",
+        payment_churn, x="Count", y="PaymentMethod", color="ChurnLabel",
         barmode="group", orientation="h",
         color_discrete_map={"Yes": COLORS["churn"], "No": COLORS["stay"]},
         title="💳 Churn by Payment Method",
@@ -385,7 +399,7 @@ with tab3:
     with c1:
         st.markdown('<div class="chart-card">', unsafe_allow_html=True)
         fig = px.histogram(
-            df, x="MonthlyCharges", color="Churn",
+            df, x="MonthlyCharges", color="ChurnLabel",
             nbins=40, barmode="overlay", opacity=0.75,
             color_discrete_map={"Yes": COLORS["churn"], "No": COLORS["stay"]},
             title="💰 Monthly Charges Distribution",
@@ -400,7 +414,7 @@ with tab3:
     with c2:
         st.markdown('<div class="chart-card">', unsafe_allow_html=True)
         fig2 = px.box(
-            df, x="Churn", y="MonthlyCharges", color="Churn",
+            df, x="ChurnLabel", y="MonthlyCharges", color="ChurnLabel",
             color_discrete_map={"Yes": COLORS["churn"], "No": COLORS["stay"]},
             title="📦 Monthly Charges Boxplot by Churn",
             template=DARK_TEMPLATE,
@@ -414,11 +428,11 @@ with tab3:
     st.markdown('<div class="chart-card">', unsafe_allow_html=True)
     fig3 = px.scatter(
         df, x="MonthlyCharges", y="TotalCharges",
-        color="Churn", opacity=0.5, size_max=6,
+        color="ChurnLabel", opacity=0.5, size_max=6,
         color_discrete_map={"Yes": COLORS["churn"], "No": COLORS["stay"]},
         title="🔵 Monthly vs Total Charges (Scatter)",
         template=DARK_TEMPLATE,
-        hover_data=["tenure"],
+        hover_data=["TenureMonths"],
     )
     fig3.update_layout(paper_bgcolor=PLOT_BG, plot_bgcolor=PLOT_BG,
                        margin=dict(t=50, b=10, l=10, r=10), height=350)
@@ -435,12 +449,12 @@ with tab4:
     with c1:
         st.markdown('<div class="chart-card">', unsafe_allow_html=True)
         fig = px.histogram(
-            df, x="tenure", color="Churn",
+            df, x="TenureMonths", color="ChurnLabel",
             nbins=30, barmode="overlay", opacity=0.75,
             color_discrete_map={"Yes": COLORS["churn"], "No": COLORS["stay"]},
             title="⏳ Tenure Distribution by Churn",
             template=DARK_TEMPLATE,
-            labels={"tenure": "Tenure (months)"},
+            labels={"TenureMonths": "Tenure (months)"},
         )
         fig.update_layout(paper_bgcolor=PLOT_BG, plot_bgcolor=PLOT_BG,
                           margin=dict(t=50, b=10, l=10, r=10))
@@ -451,12 +465,12 @@ with tab4:
         st.markdown('<div class="chart-card">', unsafe_allow_html=True)
         # Tenure bucket analysis
         df["TenureBucket"] = pd.cut(
-            df["tenure"],
+            df["TenureMonths"],
             bins=[0, 12, 24, 48, 72],
             labels=["0-12 mo", "12-24 mo", "24-48 mo", "48-72 mo"]
         )
         bucket_rate = df.groupby("TenureBucket").apply(
-            lambda x: (x["Churn"] == "Yes").mean() * 100
+            lambda x: (x["ChurnLabel"] == "Yes").mean() * 100
         ).reset_index()
         bucket_rate.columns = ["Tenure Bucket", "Churn Rate (%)"]
         fig2 = px.bar(
@@ -484,14 +498,14 @@ with tab5:
     # Encode for numeric correlation
     df_num = df.copy()
     binary_map = {"Yes": 1, "No": 0}
-    df_num["Churn"]          = df_num["Churn"].map(binary_map)
-    df_num["gender"]         = df_num["gender"].map({"Male": 1, "Female": 0})
+    df_num["Churn"]          = df_num["ChurnLabel"].map(binary_map)
+    df_num["Gender"]         = df_num["Gender"].map({"Male": 1, "Female": 0})
     df_num["Partner"]        = df_num["Partner"].map(binary_map)
     df_num["Dependents"]     = df_num["Dependents"].map(binary_map)
     df_num["PhoneService"]   = df_num["PhoneService"].map(binary_map)
     df_num["PaperlessBilling"]= df_num["PaperlessBilling"].map(binary_map)
-
-    num_cols = ["tenure", "MonthlyCharges", "TotalCharges",
+    df_num["SeniorCitizen"] = df_num["SeniorCitizen"].map(binary_map)
+    num_cols = ["TenureMonths", "MonthlyCharges", "TotalCharges",
                 "SeniorCitizen", "Partner", "Dependents",
                 "PhoneService", "PaperlessBilling", "Churn"]
 
