@@ -69,7 +69,18 @@ Customer_Churn_Prediction/
 ├── requirements.txt
 └── README.md
 ```
+## Tech Stack
 
+- Python
+- Pandas
+- NumPy
+- Matplotlib
+- Seaborn
+- Plotly
+- Scikit-Learn
+- Streamlit
+- Joblib
+- OpenPyXL
 ---
 
 ## ⚡ Quick Start
@@ -77,7 +88,7 @@ Customer_Churn_Prediction/
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/yourusername/customer-churn-prediction.git
+git clone https://github.com/saisanket232/customer-churn-prediction.git
 cd customer-churn-prediction
 pip install -r requirements.txt
 ```
@@ -128,6 +139,27 @@ streamlit run dashboard/dashboard.py
 | `PaymentMethod` | Categorical | Electronic check / Mailed check / etc. |
 | `Churn` | Target | Yes / No |
 | *+ 12 more...* | | |
+
+---
+**Workflow Diagram**
+
+Excel Dataset
+      ↓
+Data Cleaning
+      ↓
+Feature Engineering
+      ↓
+Train-Test Split
+      ↓
+Model Training
+      ↓
+Model Evaluation
+      ↓
+Random Forest Selection
+      ↓
+Streamlit Prediction App
+      ↓
+Analytics Dashboard
 
 ---
 
