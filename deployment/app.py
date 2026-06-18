@@ -27,7 +27,7 @@ st.set_page_config(
     page_title="Churn Predictor | Telco AI",
     page_icon="📡",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 # ── Custom CSS ────────────────────────────────────────────────────────────────
@@ -145,7 +145,16 @@ st.markdown("""
   .stSelectbox label, .stSlider label, .stNumberInput label {
     color: #cbd5e1 !important;
     font-weight: 500;
+
   }
+
+  [data-testid="collapsedControl"] {
+    display: none;
+}
+
+  section[data-testid="stSidebar"] {
+    display: none;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -281,7 +290,7 @@ def build_input(feature_cols):
 col_left, col_right = st.columns([1.2, 1])
 
 with col_left:
-    st.markdown('<div class="main-card">', unsafe_allow_html=True)
+    
     st.markdown("### 📊 Customer Summary")
 
     # Summary table
@@ -315,10 +324,10 @@ with col_left:
             st.markdown(f"- {r}")
     else:
         st.markdown("✅ No major risk factors detected.")
-    st.markdown('</div>', unsafe_allow_html=True)
+    
 
 with col_right:
-    st.markdown('<div class="main-card">', unsafe_allow_html=True)
+    
     st.markdown("### 🤖 Prediction Result")
 
     if predict_btn:
@@ -375,7 +384,7 @@ with col_right:
           </div>
         </div>
         """, unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+   
 
 
 # ── Model Info Footer ────────────────────────────────────────────────────────
