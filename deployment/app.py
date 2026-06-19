@@ -27,7 +27,7 @@ st.set_page_config(
     page_title="Churn Predictor | Telco AI",
     page_icon="📡",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
 
 # ── Custom CSS ────────────────────────────────────────────────────────────────
@@ -148,12 +148,6 @@ st.markdown("""
 
   }
 
-  [data-testid="collapsedControl"] {
-    display: none;
-}
-
-  section[data-testid="stSidebar"] {
-    display: none;
 }
 </style>
 """, unsafe_allow_html=True)
